@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Layanan Ambulans KIF Medan</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .hidden {
+            display: none;
+        }
+        /* Animasi loading spinner */
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #003366;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-b from-sky-100 to-gray-50 text-gray-800">
+
+    <!-- Loading Screen -->
+    <div id="loading-screen" class="fixed inset-0 bg-white z-50 flex flex-col items-center justify-center">
+        <div class="loader"></div>
+        <p id="loading-text" class="mt-4 text-gray-600">Memuat aplikasi...</p>
+    </div>
+
+    <!-- Container Utama -->
+    <div id="app-container" class="min-h-screen flex-col justify-between hidden">
+        
+        <!-- Header -->
+        <header class="bg-white shadow-md sticky top-0 z-40">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-3 flex justify-between items-center">
+                <div class="flex items-center space-x-3">
+                    <i data-lucide="ambulance" class="h-10 w-10 text-[#003366]"></i>
+                    <h1 class="text-xl sm:text-2xl font-bold text-[#003366]">Ambulans KIF Medan</h1>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <button id="lang-id" class="px-3 py-1 text-sm font-semibold bg-gray-200 rounded-md">ID</button>
+                    <button id="lang-en" class="px-3 py-1 text-sm">EN</button>
+                    <button id="admin-login-button" class="p-2 rounded-full hover:bg-gray-100">
+                        <i data-lucide="user-cog"></i>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Konten Aplikasi -->
+        <main class="flex-grow">
+            <!-- Tampilan Formulir Pemohon -->
+            <div id="user-view" class="container mx-auto p-4 sm:p-6 lg:p-8">
+                <div id="booking-form-container" class="max-w-3xl mx-auto bg-white p-6 sm:p-8 rounded-2xl shadow-lg">
+                    <h2 id="form-title" class="text-2xl font-bold text-center mb-6">Formulir Pemesanan Layanan</h2>
+                    <form id="booking-form" class="space-y-6">
+                        <!-- Status Pemesan -->
+                        <div>
+                            <label id="applicant-status-label" class="block text-sm font-medium text-gray-700 mb-2">Status Pemesan</label>
+                            <div class="flex items-center space-x-6">
+                                <label class="flex items-center">
+                                    <input type="radio" name="statusPemesan" value="Umum" class="form-radio h-4 w-4 text-[#4CAF50] border-gray-300 focus:ring-[#4CAF50]" checked>
+                                    <span id="umum-label" class="ml-2 text-gray-700">Umum</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="radio" name="statusPemesan" value="Anggota KIF" class="form-radio h-4 w-4 text-[#4CAF50] border-gray-300 focus:ring-[#4CAF50]">
+                                    <span id="kif-member-label" class="ml-2 text-gray-700">Anggota KIF</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- No. DA (Khusus Anggota) -->
+                        <div id="no-da-container" class="hidden">
+                            <label for="noDa" id="no-da-label" class="block text-sm font-medium text-gray-700">No. DA (Nomor Pendaftaran Anggota)</label>
+                            <div class="mt-1 relative">
+                                <input type="text" name="noDa" id="noDa" class="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-[#4CAF50] focus:border-[#4CAF50]">
+                                <span id="member-status-icon" class="absolute inset-y-0 right-0 pr-3 flex items-center"></span>
+                            </div>
+                            <p id="member-status-text" class="text-sm mt-1"></p>
+                        </div>
+                        
+                        <!-- Data Diri -->
+                        <div>
+                            <label for="namaPemohon" id="applicant-name-label" class="block text-sm font-medium text-gray-700">Nama Pemohon</label>
+                            <input type="text" name="namaPemohon" id="namaPemohon" required class="mt-1 w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-[#4CAF50] focus:border-[#4CAF50]">
+                        </div>
+                        <div>
+                            <label for="nomorHp" id="phone-number-label" class="block text-sm font-medium text-gray-700">Nomor HP (WhatsApp Aktif)</label>
+                            <input type="tel" name="nomorHp" id="nomorHp" placeholder="0812..." required class="mt-1 w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-[#4CAF50] focus:border-[#4CAF50]">
+                        </div>
+                        <div>
+                            <label for="alamatPemesan" id="applicant-address-label" class="block text-sm font-medium text-gray-700">Alamat Pemesan</label>
+                            <textarea name="alamatPemesan" id="alamatPemesan" rows="2" required class="mt-1 w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-[#4CAF50] focus:border-[#4CAF50]"></textarea>
+                        </div>
+
+                        <!-- Keperluan & Lokasi -->
+                        <div>
+                            <label for="keperluan" id="service-type-label" class="block text-sm font-medium text-gray-700">Keperluan Layanan</label>
+                            <select id="keperluan" name="keperluan" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-[#4CAF50] focus:border-[#4CAF50] sm:text-sm rounded-md">
+                                <option id="option-jenazah">Mengantar Jenazah</option>
+                                <option id="option-sakit">Mengantar Orang Sakit</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="lokasiJemput" id="pickup-location-label" class="block text-sm font-medium text-gray-700">Lokasi Penjemputan</label>
+                            <input type="text" name="lokasiJemput" id="lokasiJemput" required class="mt-1 w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-[#4CAF50] focus:border-[#4CAF50]" placeholder="Ketik alamat lengkap penjemputan...">
+                        </div>
+                        <div>
+                            <label for="lokasiTujuan" id="destination-location-label" class="block text-sm font-medium text-gray-700">Lokasi Tujuan</label>
+                            <input type="text" name="lokasiTujuan" id="lokasiTujuan" required class="mt-1 w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-[#4CAF50] focus:border-[#4CAF50]" placeholder="Ketik alamat lengkap tujuan...">
+                        </div>
+                        
+                        <!-- Kalkulasi Tarif -->
+                        <div id="tarif-container" class="bg-green-50 p-4 rounded-lg text-center hidden">
+                            <p id="distance-label" class="text-sm text-gray-600">Estimasi Jarak: <span id="jarak-text" class="font-bold">...</span></p>
+                            <p id="fare-label" class="text-lg font-bold text-[#4CAF50] mt-1">Estimasi Tarif: <span id="tarif-text" class="text-2xl">...</span></p>
+                            <p id="calculating-text" class="text-sm text-gray-500 italic">Menghitung...</p>
+                        </div>
+                        
+                        <!-- Tombol Aksi -->
+                        <button type="submit" id="submit-button" class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-lg font-medium text-white bg-[#4CAF50] hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:bg-gray-400">
+                            Kirim Permohonan
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Tampilan Menunggu Konfirmasi -->
+            <div id="waiting-view" class="hidden container mx-auto p-4 sm:p-6 lg:p-8 text-center">
+                <div class="max-w-md mx-auto bg-white p-8 rounded-2xl shadow-lg">
+                    <div class="animate-pulse mb-4">
+                        <i data-lucide="mail-check" class="mx-auto h-16 w-16 text-[#4CAF50]"></i>
+                    </div>
+                    <h2 id="waiting-title" class="text-2xl font-bold mb-2">Permohonan Terkirim!</h2>
+                    <p id="waiting-message" class="text-gray-600">Permohonan Anda sedang ditinjau oleh Operator. Mohon tunggu konfirmasi melalui WhatsApp/SMS. Anda akan dihubungi sesegera mungkin.</p>
+                </div>
+            </div>
+
+             <!-- Tampilan Admin Login -->
+            <div id="admin-login-view" class="hidden container mx-auto p-4 sm:p-6 lg:p-8">
+                <div class="max-w-sm mx-auto bg-white p-8 rounded-2xl shadow-lg mt-10">
+                    <h2 id="admin-login-title" class="text-2xl font-bold text-center mb-6">Login Operator</h2>
+                    <form id="admin-login-form" class="space-y-4">
+                        <div>
+                            <label for="password" id="password-label" class="block text-sm font-medium text-gray-700">Password</label>
+                            <input type="password" id="password" class="mt-1 w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-[#003366] focus:border-[#003366]">
+                        </div>
+                        <p id="login-error" class="text-red-500 text-sm hidden">Password salah.</p>
+                        <button type="submit" id="login-button" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-lg shadow-sm text-base font-medium text-white bg-[#003366] hover:bg-blue-900">
+                            Masuk
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Tampilan Dashboard Operator -->
+            <div id="admin-dashboard-view" class="hidden container mx-auto p-4 sm:p-6 lg:p-8">
+                <div class="flex flex-col sm:flex-row justify-between sm:items-center mb-6 gap-4">
+                    <h2 id="dashboard-title" class="text-3xl font-bold">Dashboard Operator</h2>
+                    <button id="logout-button" class="flex items-center space-x-2 px-4 py-2 text-sm font-medium text-white bg-[#F44336] rounded-lg hover:bg-red-700 self-start sm:self-center">
+                        <i data-lucide="log-out" class="w-4 h-4"></i>
+                        <span id="logout-text">Keluar</span>
+                    </button>
+                </div>
+                
+                <div id="current-service-card" class="hidden bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 rounded-lg mb-6">
+                    <div class="flex">
+                        <div class="py-1"><i data-lucide="alert-triangle" class="h-5 w-5 text-yellow-500 mr-3"></i></div>
+                        <div>
+                            <p id="current-service-info" class="font-bold">Satu layanan sedang berjalan. Pemesanan baru ditutup sementara.</p>
+                            <button id="complete-service-button" class="mt-2 px-3 py-1 bg-green-500 text-white text-sm font-medium rounded hover:bg-green-600">Selesaikan Layanan</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Navigasi Tab Dashboard -->
+                <div class="border-b border-gray-200 mb-4">
+                    <nav class="-mb-px flex space-x-6" aria-label="Tabs">
+                        <button id="tab-incoming" class="whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm border-blue-500 text-blue-600">Permohonan Masuk</button>
+                        <button id="tab-history" class="whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">Riwayat Lengkap</button>
+                    </nav>
+                </div>
+
+                <!-- Konten Tab -->
+                <div id="tab-content-incoming">
+                    <h3 id="request-list-title" class="text-xl font-semibold mb-4">Daftar Permohonan Masuk</h3>
+                    <div id="incoming-request-list" class="space-y-4">
+                        <!-- Kartu permohonan masuk akan diisi oleh JavaScript -->
+                    </div>
+                    <p id="no-request-text" class="text-center text-gray-500 py-8 hidden">Belum ada permohonan baru.</p>
+                </div>
+                
+                <div id="tab-content-history" class="hidden">
+                     <h3 id="history-list-title" class="text-xl font-semibold mb-4">Riwayat Lengkap Pemesanan</h3>
+                     <div id="history-request-list" class="space-y-4">
+                        <!-- Kartu riwayat akan diisi oleh JavaScript -->
+                    </div>
+                    <p id="no-history-text" class="text-center text-gray-500 py-8 hidden">Belum ada riwayat pemesanan.</p>
+                </div>
+            </div>
+
+        </main>
+
+        <!-- Footer -->
+        <footer class="bg-gray-800 text-white">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-6 text-center">
+                <p id="contact-operator-label" class="font-semibold text-lg mb-2">Informasi Hubungi Operator</p>
+                <div class="flex flex-col sm:flex-row justify-center items-center space-y-2 sm:space-y-0 sm:space-x-6 text-sm">
+                    <a href="https://wa.me/6285296785867" target="_blank" class="flex items-center space-x-2 hover:text-green-400">
+                        <i data-lucide="phone"></i>
+                        <span>Sunanda: 0852 9678 5867</span>
+                    </a>
+                    <a href="https://wa.me/628126036110" target="_blank" class="flex items-center space-x-2 hover:text-green-400">
+                        <i data-lucide="phone"></i>
+                        <span>Abdul Mtolib: 0812 6036 110</span>
+                    </a>
+                </div>
+                <p id="developer-credit-label" class="text-xs text-gray-400 mt-4">Pengembang : Abu Tantra</p>
+            </div>
+        </footer>
+    </div>
+    
+    <!-- Modal: Ambulance Busy -->
+    <div id="ambulance-busy-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl shadow-xl p-6 sm:p-8 text-center max-w-sm w-full">
+            <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
+                <i data-lucide="siren" class="h-6 w-6 text-[#F44336]"></i>
+            </div>
+            <h3 id="busy-modal-title" class="text-lg font-medium leading-6 text-gray-900">Ambulans Sedang Beroperasi</h3>
+            <div class="mt-2">
+                <p id="busy-modal-text" class="text-sm text-gray-500">Mohon maaf, ambulans sedang dalam pelayanan. Silakan coba beberapa saat lagi.</p>
+            </div>
+            <div class="mt-5">
+                <button id="close-busy-modal" type="button" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-[#F44336] text-base font-medium text-white hover:bg-red-700">
+                    Tutup
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal: Request Detail & Driver Assignment -->
+    <div id="request-detail-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl shadow-xl p-6 sm:p-8 max-w-lg w-full transform transition-all">
+            <div class="flex justify-between items-start">
+                <h3 id="detail-modal-title" class="text-xl font-bold text-gray-900">Detail Permohonan</h3>
+                 <button id="close-detail-modal" class="text-gray-400 hover:text-gray-600">
+                    <i data-lucide="x" class="h-6 w-6"></i>
+                </button>
+            </div>
+            <div id="detail-content" class="mt-4 space-y-3 text-sm">
+                <!-- Detail konten diisi JavaScript -->
+            </div>
+            <div class="mt-6">
+                 <label for="driver-select" id="assign-driver-label" class="block text-sm font-medium text-gray-700">Tentukan Driver</label>
+                 <select id="driver-select" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-[#003366] focus:border-[#003366] sm:text-sm rounded-md">
+                     <!-- Opsi driver diisi JavaScript -->
+                 </select>
+            </div>
+            <div class="mt-6 flex flex-col sm:flex-row-reverse gap-3">
+                <button id="approve-button" data-id="" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-[#4CAF50] text-base font-medium text-white hover:bg-green-600 sm:w-auto">
+                    Setujui & Kirim Notifikasi
+                </button>
+                <button id="reject-button" data-id="" class="w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 sm:w-auto">
+                    Tolak
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <script type="module">
+        // Import fungsi-fungsi Firebase
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, addDoc, updateDoc, collection, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+        // --- DATA APLIKASI ---
+        const MOCK_KIF_MEMBERS = {"673":{"name":"Ema Wardhana","status":"Aktif"},"672":{"name":"Tri Wahyuda","status":"Aktif"},"671":{"name":"Dr. Hasruddin Lubis, M.Pd.","status":"Aktif"},"670":{"name":"Zainul Arifin","status":"Aktif"},"669":{"name":"Aziz Nasution","status":"Aktif"},"668":{"name":"Sugeng Hedratno","status":"Aktif"},"667":{"name":"Muhammad Riza Angkat","status":"Aktif"},"666":{"name":"Nugraha Pratama","status":"Aktif"},"665":{"name":"Inong Eliza","status":"Aktif"},"664":{"name":"Cut Nurhazizah","status":"Aktif"},"663":{"name":"Yusnani Saragih","status":"Aktif"},"662":{"name":"Elfiza Fitri","status":"Aktif"},"661":{"name":"Gusmeri ( Umi Ayang )","status":"Aktif"},"660":{"name":"Chomsah Zanira","status":"Aktif"},"659":{"name":"Sri Susilawaty","status":"Aktif"},"658":{"name":"Chairunnisa Fahreni","status":"Aktif"},"657":{"name":"M. Taufik Hidayat Daulay","status":"Aktif"},"656":{"name":"Rahma Sari Hasibuan","status":"Aktif"},"655":{"name":"Riza Pahlawan","status":"Aktif"},"654":{"name":"Rahmad Ibnu Azhari (Bima)","status":"Aktif"},"653":{"name":"Sri Erwina Lubis","status":"Aktif"},"652":{"name":"Irma Ritonga","status":"Aktif"},"651":{"name":"Karlina","status":"Aktif"},"650":{"name":"Eka Juliana Siregar","status":"Aktif"},"649":{"name":"Dewi Puspasari","status":"Aktif"},"648":{"name":"Muhammad Said Efendy Manik Abu Hannah","status":"Aktif"},"647":{"name":"Anisya Mardhatila Ummu Alfaiza","status":"Aktif"},"646":{"name":"Rafida Ummu Fida","status":"Aktif"},"645":{"name":"Yelmi Hartati Ummu Wais","status":"Aktif"},"644":{"name":"Muhammad Ridwan","status":"Aktif"},"643":{"name":"Mia Amalia Ummu Acha","status":"Aktif"},"642":{"name":"Muhammad Noor Reza Laga","status":"Aktif"},"641":{"name":"Khairul Azmi Nasution","status":"Aktif"},"640":{"name":"Dahrul Harahap","status":"Aktif"},"639":{"name":"Siti Syarifah Harahap Ummu Alif Sholli","status":"Aktif"},"638":{"name":"Karini Oktaviani","status":"Aktif"},"637":{"name":"Aprilia Ummu Baihaqi","status":"Aktif"},"636":{"name":"Muhammad Natio Gibran","status":"Aktif"},"635":{"name":"Fajar Romadhon Abu Nabila","status":"Aktif"},"634":{"name":"Siti Chadijah Dalimunte","status":"Aktif"},"633":{"name":"Yusnaini","status":"Aktif"},"632":{"name":"Dewi Armayati Nst Ummu Dedi","status":"Aktif"},"631":{"name":"Dhea Nanda Haditya Ummu Humayra","status":"Aktif"},"630":{"name":"Lily Sofrina","status":"Aktif"},"629":{"name":"HANANI PERMATASARI LUBIS","status":"Aktif"},"628":{"name":"Riasahlah Ummu Nabila","status":"Aktif"},"627":{"name":"Prihartini Mayang Sari","status":"Aktif"},"626":{"name":"Hafshoh Ummu Lukman","status":"Aktif"},"625":{"name":"Amrita Sari Ummu Imam","status":"Aktif"},"624":{"name":"MAHDALENA UMMU AULYA","status":"Aktif"},"623":{"name":"Cilvia Yaohana","status":"Aktif"},"622":{"name":"Fatimah","status":"Aktif"},"621":{"name":"Fitri Yanti Ummu Jerry","status":"Aktif"},"620":{"name":"Tengku Ely","status":"Aktif"},"619":{"name":"Rika Monika Ummu Ruhi","status":"Aktif"},"618":{"name":"HAMBALI BIN SAID","status":"Aktif"},"617":{"name":"Riduan Simatupang","status":"Aktif"},"616":{"name":"Hoirul Arifin Napitupulu","status":"Aktif"},"615":{"name":"Febrinaldi Siregar","status":"Aktif"},"614":{"name":"Lia Apriana","status":"Aktif"},"613":{"name":"Dhea Citra Dewi","status":"Aktif"},"612":{"name":"Herawati kurnia Ummu Rafaldy","status":"Aktif"},"611":{"name":"Muhammad Arief","status":"Aktif"},"610":{"name":"Dedy Azhari","status":"Aktif"},"609":{"name":"Yaumil Fahri Laisina Abu Khanza","status":"Aktif"},"608":{"name":"Zahara H. Rahmi Ummu Nashrina","status":"Aktif"},"607":{"name":"Novi Andriyani Rangkuti","status":"Aktif"},"606":{"name":"Pri Hardayanti","status":"Aktif"},"605":{"name":"Eliyana Syahfita","status":"Aktif"},"604":{"name":"Sri Rahayu","status":"Aktif"},"603":{"name":"Gusni Saswenti Ummu Alghaniy","status":"Aktif"},"602":{"name":"Sukarno","status":"Aktif"},"601":{"name":"Ridho Kurniawan Syahputra","status":"Aktif"},"600":{"name":"Agus Supriadi","status":"Aktif"},"599":{"name":"Abdullah Kadri Abu Asfa","status":"Aktif"},"598":{"name":"Abdul Majid Abu Amar","status":"Aktif"},"597":{"name":"Feri Abu Ilham","status":"Aktif"},"596":{"name":"Budi Anto","status":"Tidak Aktif"},"595":{"name":"Ayu Permata Sari","status":"Aktif"},"594":{"name":"Murniati","status":"Tidak Aktif"},"593":{"name":"Junita Astuti","status":"Aktif"},"592":{"name":"Trisnawati","status":"Aktif"},"591":{"name":"Kartina","status":"Tidak Aktif"},"590":{"name":"Fahna Osman","status":"Tidak Aktif"},"589":{"name":"Anita Harahap","status":"Aktif"},"588":{"name":"Dewi Oktavianti","status":"Tidak Aktif"},"587":{"name":"Muhammad Ridwan Abu Dzaki","status":"Aktif"},"586":{"name":"ElVIDAWATI SIMATUPANG (Kety)","status":"Tidak Aktif"},"585":{"name":"SURIANTO","status":"Aktif"},"584":{"name":"Nova Hariyati","status":"Aktif"},"583":{"name":"Rina Wahyuni","status":"Tidak Aktif"},"582":{"name":"Jusniati","status":"Tidak Aktif"},"581":{"name":"Lissa","status":"Tidak Aktif"},"580":{"name":"Munawar","status":"Aktif"},"579":{"name":"Indra Fauzan","status":"Aktif"},"578":{"name":"Muhammad Taufik Abu Farhan","status":"Aktif"},"577":{"name":"Emir Rauf Novandi","status":"Aktif"},"576":{"name":"Romy Karim Siregar","status":"Aktif"},"575":{"name":"Tri Martini","status":"Aktif"},"574":{"name":"Ilham Surya","status":"Aktif"},"573":{"name":"Nova Liza Oktavira Ummu Farhan","status":"Aktif"},"572":{"name":"Junaidi Abu Wahyu","status":"Aktif"},"571":{"name":"Ayda Mastika Sari Hasibuan","status":"Aktif"},"570":{"name":"Yuswita Emilia Ummu Zikri","status":"Tidak Aktif"},"569":{"name":"Bayu Dwi Pawaka Ummu Khadizah","status":"Aktif"},"568":{"name":"Fitri Yani","status":"Aktif"},"567":{"name":"Ami","status":"Tidak Aktif"},"566":{"name":"Putri Khaivi","status":"Tidak Aktif"},"565":{"name":"Febriani","status":"Tidak Aktif"},"564":{"name":"Delba Agustini Ummu Asha","status":"Aktif"},"563":{"name":"Achmad Yamin","status":"Aktif"},"562":{"name":"Asdo Siallagan","status":"Tidak Aktif"},"561":{"name":"Muhammad Yunus","status":"Aktif"},"560":{"name":"Alfin Marganda","status":"Aktif"},"559":{"name":"Juliana Lubis","status":"Aktif"},"558":{"name":"Salman Paris Siregar","status":"Aktif"},"557":{"name":"Muhammad Akbar","status":"Tidak Aktif"},"556":{"name":"Muhammad Husni Thamrin","status":"Aktif"},"555":{"name":"Andri Prasetya Abu Aisyah","status":"Aktif"},"554":{"name":"Sri noviani","status":"Aktif"},"553":{"name":"Yopi Abu Wildan","status":"Aktif"},"552":{"name":"Indra Wijaya Abu Danish","status":"Tidak Aktif"},"551":{"name":"Indra Syah Putra","status":"Aktif"},"550":{"name":"Ahmad Ridwan Hakim","status":"Aktif"},"549":{"name":"Muhammad Ikhwan Abu Sheza","status":"Aktif"},"548":{"name":"Taufiq Hasibuan","status":"Tidak Aktif"},"547":{"name":"Djamian","status":"Aktif"},"546":{"name":"Puji","status":"Tidak Aktif"},"545":{"name":"Dwika Safitri","status":"Aktif"},"544":{"name":"Mohammad Hafiz","status":"Aktif"},"543":{"name":"ANDRIANTI KESUMA UMMU AZMI","status":"Tidak Aktif"},"542":{"name":"Latifah Hanum","status":"Tidak Aktif"},"541":{"name":"Burhanuddin Usman","status":"Aktif"},"540":{"name":"Sony Ardiles Tanjung","status":"Aktif"},"539":{"name":"Muklas Setiarno","status":"Aktif"},"538":{"name":"Faisal Fahreza Abu Laiba","status":"Aktif"},"537":{"name":"Muhammad Idris","status":"Aktif"},"536":{"name":"Taufiq Fadillah Ramadhan","status":"Aktif"},"535":{"name":"Burhanuddin Abu Fahlul Aziz","status":"Aktif"},"534":{"name":"Eko Prasetyo","status":"Tidak Aktif"},"533":{"name":"Andi Ilham Lubis","status":"Aktif"},"532":{"name":"Junilawaty","status":"Tidak Aktif"},"531":{"name":"Nurleili Amini","status":"Tidak Aktif"},"530":{"name":"Eza Ummu Azkayra","status":"Tidak Aktif"},"529":{"name":"Pitri Ummu Aufa","status":"Tidak Aktif"},"528":{"name":"Rina Wulan Sari Ummu Carissa","status":"Aktif"},"527":{"name":"Ira Ummu Adzra","status":"Tidak Aktif"},"526":{"name":"Iliana Ummu Uwais","status":"Tidak Aktif"},"525":{"name":"Khairunnisa Ummu Abid","status":"Tidak Aktif"},"524":{"name":"Fatmawati","status":"Tidak Aktif"},"523":{"name":"Juliati","status":"Tidak Aktif"},"522":{"name":"Reni Ummu Faiz","status":"Tidak Aktif"},"521":{"name":"Maulida Ulfa","status":"Tidak Aktif"},"520":{"name":"Ema Kasmita","status":"Tidak Aktif"},"519":{"name":"Nani Rachmazani","status":"Tidak Aktif"},"518":{"name":"Ina Ummu Nadira","status":"Aktif"},"517":{"name":"Novrizal Lubis","status":"Aktif"},"516":{"name":"Dedy Mustika","status":"Aktif"},"515":{"name":"Tengku Faisal ST","status":"Aktif"},"514":{"name":"Septia Indah Ummu Naurah","status":"Aktif"},"513":{"name":"AYU PUSPITA","status":"Aktif"},"512":{"name":"Edy Pratama purba","status":"Tidak Aktif"},"511":{"name":"Ika Kartika Sari","status":"Aktif"},"510":{"name":"DRG ARMELINDA","status":"Tidak Aktif"},"509":{"name":"Abdul Haris Parlindungan","status":"Aktif"},"508":{"name":"Andi Ilyas","status":"Aktif"},"507":{"name":"Muhammad Ridwan","status":"Tidak Aktif"},"506":{"name":"Mohammad Taufiq Oktaria Hidayah","status":"Tidak Aktif"},"505":{"name":"Nur Anisa","status":"Tidak Aktif"},"504":{"name":"Rosnita","status":"Aktif"},"503":{"name":"Liyasma","status":"Tidak Aktif"},"502":{"name":"Habib Zhaffran Adani","status":"Tidak Aktif"},"501":{"name":"Vivi Ramayanti Ummu Azry","status":"Tidak Aktif"},"500":{"name":"Hadrian Nasution","status":"Aktif"},"499":{"name":"Idawaty","status":"Aktif"},"498":{"name":"SUHERMANTO","status":"Aktif"},"497":{"name":"Lachmuddin","status":"Aktif"},"496":{"name":"Budi Arto Abu Ishaq","status":"Aktif"},"495":{"name":"Muhammad Jhon Nova Abu Haidar","status":"Aktif"},"494":{"name":"Muhammad Mustaqim Abu Zayyan","status":"Tidak Aktif"},"493":{"name":"M. Rushan Haqiqi Abu Yahya","status":"Tidak Aktif"},"492":{"name":"Luthfi Maulana Hasan Abu Sufyan","status":"Aktif"},"491":{"name":"Abdul Halim siregar","status":"Tidak Aktif"},"490":{"name":"Azhari Ritonga Abu Fathan","status":"Aktif"},"489":{"name":"Rusli Ady Yahya","status":"Aktif"},"488":{"name":"Muhammad Zaini Hafiz (Zein)","status":"Aktif"},"487":{"name":"Ari Amanda Hasibuan","status":"Tidak Aktif"},"486":{"name":"Ninda Horiza Satifa Ummu Fathar","status":"Tidak Aktif"},"485":{"name":"Ummu Hanifah","status":"Tidak Aktif"},"484":{"name":"Nurhanifah","status":"Aktif"},"483":{"name":"Enni Syarikawati","status":"Tidak Aktif"},"482":{"name":"Ratna Sri Murni","status":"Tidak Aktif"},"481":{"name":"Magdalena Ummu Maryam","status":"Aktif"},"480":{"name":"Nurmahyani Lubis","status":"Aktif"},"479":{"name":"Cut Agusnita","status":"Aktif"},"478":{"name":"Nanda Muthia","status":"Aktif"},"477":{"name":"Ony Hendrawan","status":"Tidak Aktif"},"476":{"name":"Sirmadaniah Ummu Zahra","status":"Tidak Aktif"},"475":{"name":"Riza M.Nuh (Umi Riza)","status":"Aktif"},"474":{"name":"Suwat Mini Ummu Karim","status":"Tidak Aktif"},"473":{"name":"Sri Hariyanti","status":"Tidak Aktif"},"472":{"name":"Junaidi (klambir 5)","status":"Aktif"},"471":{"name":"Hasan Basri","status":"Aktif"},"470":{"name":"Suhaimi Abu Uwais","status":"Aktif"},"469":{"name":"Vivi Arianty","status":"Tidak Aktif"},"468":{"name":"Trisna Lizita Pratiwi L Tobing Ummu Zaara","status":"Tidak Aktif"},"467":{"name":"Indra Basuki","status":"Aktif"},"466":{"name":"NURBAITI LUBIS","status":"Aktif"},"465":{"name":"Herny Trisna Ningsih","status":"Tidak Aktif"},"464":{"name":"Ade Sosana Damanik","status":"Aktif"},"463":{"name":"Amar Al Auzi Abu Aqilah","status":"Tidak Aktif"},"462":{"name":"Aski Maulia Fitri Nasution","status":"Tidak Aktif"},"461":{"name":"DINA GITA MELODI Ummu Hafiz","status":"Tidak Aktif"},"460":{"name":"Ella Ummu Shafiyyah","status":"Tidak Aktif"},"459":{"name":"HENDRA KURNIAWAN NASUTION ABU RUQAYYA","status":"Aktif"},"458":{"name":"Ridwan Syahputra","status":"Aktif"},"457":{"name":"Zulpan Abu Zubair","status":"Aktif"},"456":{"name":"NUR AHMAD FADIL","status":"Tidak Aktif"},"455":{"name":"Febriandi Yusuf Abu Jinan","status":"Aktif"},"454":{"name":"Dodi Lesmana Abu Sajid","status":"Aktif"},"453":{"name":"Chairil Anwar","status":"Aktif"},"452":{"name":"PARHIMPUNAN SIREGAR","status":"Aktif"},"451":{"name":"Ahmad Idris Daulay","status":"Aktif"},"450":{"name":"Muhammad Fauzi Nur S.sos ( Abu Qafka )","status":"Aktif"},"449":{"name":"Imelda Lubis Ummu Nadya","status":"Tidak Aktif"},"448":{"name":"Satika","status":"Tidak Aktif"},"447":{"name":"Dede Afriyanto Abu Ali","status":"Tidak Aktif"},"446":{"name":"Cut Elfianida Ummu Qafka","status":"Tidak Aktif"},"445":{"name":"Eva Hajiah Suryani Ummu Naila","status":"Tidak Aktif"},"444":{"name":"Irfandi Samosir Abu Ratu","status":"Aktif"},"443":{"name":"MUHAMMAD RIDWAN","status":"Aktif"},"442":{"name":"Fitra Yunita Sari Ummu Uwais","status":"Tidak Aktif"},"441":{"name":"Nurbaini","status":"Tidak Aktif"},"440":{"name":"Andika Sanjaya Abu Luqman","status":"Aktif"},"439":{"name":"Eka febrianti nst","status":"Tidak Aktif"},"438":{"name":"Yayang rotama,S.Kom","status":"Tidak Aktif"},"437":{"name":"Sri Alfiani","status":"Aktif"},"436":{"name":"Nur Mahyani Lubis","status":"Tidak Aktif"},"435":{"name":"Jurnima","status":"Aktif"},"434":{"name":"Masniah Ummu Salim","status":"Tidak Aktif"},"433":{"name":"Wilma Wahyuni Harahap","status":"Aktif"},"432":{"name":"Nurhajimah Ummu Eka","status":"Aktif"},"431":{"name":"Ning Sun (Albarokah)","status":"Aktif"},"430":{"name":"Roni Paslah","status":"Tidak Aktif"},"429":{"name":"Amir Hamzah","status":"Tidak Aktif"},"428":{"name":"RAHIMA AZWIR","status":"Aktif"},"427":{"name":"Abdul Munir Ismail","status":"Tidak Aktif"},"426":{"name":"Sulaiman Hamzah Abu Saif","status":"Tidak Aktif"},"425":{"name":"Muhammad Iqbal","status":"Aktif"},"424":{"name":"Akhmad Razali Barus Abu Fakhri","status":"Aktif"},"423":{"name":"M. Haris Amriza","status":"Tidak Aktif"},"422":{"name":"Suradi","status":"Tidak Aktif"},"421":{"name":"Deni Ramadhana","status":"Tidak Aktif"},"420":{"name":"Kawalta Sembiring","status":"Aktif"},"419":{"name":"Angga Saputra","status":"Aktif"},"418":{"name":"Joni Warman Abu Yusro","status":"Aktif"},"417":{"name":"Julkiffli Kaban","status":"Aktif"},"416":{"name":"Andi Sugihartono","status":"Aktif"},"415":{"name":"Aristia Ummu Khanza","status":"Aktif"},"414":{"name":"Iskandar Lubis Abu Naya","status":"Tidak Aktif"},"413":{"name":"Muhammad Alizein Abu Malika","status":"Tidak Aktif"},"412":{"name":"Sri Dewi Ummu Ica","status":"Tidak Aktif"},"411":{"name":"Sofian Effendi Abu Habibah","status":"Aktif"},"410":{"name":"Reni Ummu Fadil","status":"Tidak Aktif"},"409":{"name":"Mhd. Salman alfarizi siregar","status":"Tidak Aktif"},"408":{"name":"MUHAMMAD KHAIRIL IRFAN SINAGA","status":"Tidak Aktif"},"407":{"name":"Ahmad Faris","status":"Tidak Aktif"},"406":{"name":"Rosmaniar","status":"Aktif"},"405":{"name":"Faridah Eriani","status":"Tidak Aktif"},"404":{"name":"Vidya Fatimah","status":"Tidak Aktif"},"403":{"name":"Ruwi Sinta","status":"Tidak Aktif"},"402":{"name":"Iken","status":"Aktif"},"401":{"name":"Dinny Andriani Purba","status":"Aktif"},"400":{"name":"Irma Puji Ummu Ayla","status":"Aktif"},"399":{"name":"Rahima Purba","status":"Aktif"},"398":{"name":"Yuyun","status":"Aktif"},"397":{"name":"Yusmeri","status":"Aktif"},"396":{"name":"Nendar Wahyuni","status":"Aktif"},"395":{"name":"Lisa Ummu Sa'ad","status":"Tidak Aktif"},"394":{"name":"Nadira Hermandah Lubis","status":"Aktif"},"393":{"name":"Ariyanti Ummu Ari","status":"Tidak Aktif"},"392":{"name":"DONNA MIRANDA UMMU NAZWA","status":"Aktif"},"391":{"name":"Asmaradil Abu Aqila","status":"Tidak Aktif"},"390":{"name":"Ayub Syahputra","status":"Tidak Aktif"},"389":{"name":"Abdy Wahdani ( Buya Haneen )","status":"Aktif"},"388":{"name":"Feri Ari Irawan Abu Aalifah","status":"Aktif"},"387":{"name":"Syahrizal Darwis","status":"Aktif"},"386":{"name":"Muhammad Seger Harto Abu Baihaqi","status":"Aktif"},"385":{"name":"M. Zulfadhli Matondang","status":"Aktif"},"384":{"name":"Chairuddin Indra","status":"Tidak Aktif"},"383":{"name":"Zainal Abidin","status":"Tidak Aktif"},"382":{"name":"Roby Perangin - rangin","status":"Aktif"},"381":{"name":"Irfandi syahputra","status":"Tidak Aktif"},"380":{"name":"Kurniawan Wibowo","status":"Tidak Aktif"},"379":{"name":"Fani Desfrian Ramadhan","status":"Tidak Aktif"},"378":{"name":"P. Gito Sibiru biru","status":"Tidak Aktif"},"377":{"name":"Ahsanu Mun'im Abu Hana","status":"Tidak Aktif"},"376":{"name":"Bayu Dirgantara Putera Nasution","status":"Tidak Aktif"},"375":{"name":"TRIWALDI MANIK Abu Alisha","status":"Aktif"},"374":{"name":"Rivan Kurniawan Abu Ridho","status":"Aktif"},"373":{"name":"KARTONO Abu Fadhill","status":"Aktif"},"372":{"name":"Herman Gunawan Nasution Abu Noya","status":"Aktif"},"371":{"name":"Desparizal Abu Hamdi","status":"Aktif"},"370":{"name":"Edi Susanto Nainggolan","status":"Aktif"},"369":{"name":"Muhammad Rizky Syahputra Munthe","status":"Tidak Aktif"},"368":{"name":"Verany Melinda Purba","status":"Aktif"},"367":{"name":"Devi Fiya","status":"Tidak Aktif"},"366":{"name":"Leli Ummu Aqila","status":"Tidak Aktif"},"365":{"name":"Nitra Ummu Ilham","status":"Aktif"},"364":{"name":"Ummu Nuno","status":"Aktif"},"363":{"name":"Rahayu","status":"Aktif"},"362":{"name":"Marissa Ulfa Ummu Umair","status":"Aktif"},"361":{"name":"Pratiwi Putri Ummu Baihaki","status":"Aktif"},"360":{"name":"Asfarida Ummu Ghifari","status":"Aktif"},"359":{"name":"Andi Rahayu Abu Hafiz","status":"Aktif"},"358":{"name":"Dodo Halif Utama Berutu","status":"Aktif"},"357":{"name":"Supriyanto","status":"Aktif"},"356":{"name":"Irwan Abu Nabil","status":"Aktif"},"355":{"name":"M. Ali Zein","status":"Aktif"},"354":{"name":"Surianto Abu Ghifari","status":"Aktif"},"353":{"name":"Isa Anshori","status":"Aktif"},"352":{"name":"Taufik Afrianda Abu Zaid","status":"Aktif"},"351":{"name":"AHMAD GANTI Abu Annisa","status":"Tidak Aktif"},"350":{"name":"Zalveri Abu Agla","status":"Tidak Aktif"},"349":{"name":"Muhammad Permana","status":"Tidak Aktif"},"348":{"name":"Hermansyah (Ajo Asli)","status":"Tidak Aktif"},"347":{"name":"Firman Yusuf Nasution Abu Abdillah","status":"Aktif"},"346":{"name":"Wahyu Hidayat Abu Alif","status":"Aktif"},"345":{"name":"Junaidi","status":"Tidak Aktif"},"344":{"name":"Sugiyanto Abu Farhan","status":"Aktif"},"343":{"name":"Siti Salamah","status":"Tidak Aktif"},"342":{"name":"Hanifah Umi Sultan","status":"Aktif"},"341":{"name":"Sri Utami Ummu Fauzan","status":"Tidak Aktif"},"340":{"name":"Adek Mandasari Ummu Nawa","status":"Aktif"},"339":{"name":"Faisal Taufik Abu Farhan","status":"Tidak Aktif"},"338":{"name":"Rustika Sari","status":"Aktif"},"337":{"name":"Putri Handayani","status":"Aktif"},"336":{"name":"Sayang Sukasno","status":"Aktif"},"335":{"name":"Murniyati","status":"Tidak Aktif"},"334":{"name":"Putri Dahrum Dakwah","status":"Tidak Aktif"},"333":{"name":"Nur'aini","status":"Tidak Aktif"},"332":{"name":"Fitri Anizar Ummu Nabilah","status":"Tidak Aktif"},"331":{"name":"Purwanti Ummu Fadhil","status":"Aktif"},"330":{"name":"Rapika Warda","status":"Tidak Aktif"},"329":{"name":"Ita Hartati (Ummu Fatih)","status":"Tidak Aktif"},"328":{"name":"Silvi Ummu Sabai","status":"Tidak Aktif"},"327":{"name":"Sofia Efinesi","status":"Aktif"},"326":{"name":"Irma Harjuni Nasution Ummu Rafka","status":"Aktif"},"325":{"name":"Yusnizar","status":"Tidak Aktif"},"324":{"name":"Wasi'ah","status":"Aktif"},"323":{"name":"Sri Ummu Rizky","status":"Aktif"},"322":{"name":"Faradilla Ummu Farah","status":"Aktif"},"321":{"name":"Yan Budiman Abu Wais","status":"Aktif"},"320":{"name":"MUHAMMAD FAHRUL ROZI LUBIS Abu Uwais","status":"Tidak Aktif"},"319":{"name":"Ikhwan Nushopa Abu Azzam","status":"Aktif"},"318":{"name":"Ayudya Rifandhy (Yudha Johor)","status":"Tidak Aktif"},"317":{"name":"Tugiono Abu Salman","status":"Aktif"},"316":{"name":"Indah mentari","status":"Aktif"},"315":{"name":"Sri wiyanti Ningsih Ummu Fahru","status":"Tidak Aktif"},"314":{"name":"Muhammad Syahrir Abi Yasmin","status":"Tidak Aktif"},"313":{"name":"FADRIAN ARLIANDA LUBIS Abu Fadhlan","status":"Tidak Aktif"},"312":{"name":"Sutanti Ummu Adam","status":"Aktif"},"311":{"name":"Nur'ainun Ummu Hudzaifah","status":"Tidak Aktif"},"310":{"name":"Suwaiba Ummu Ryza","status":"Aktif"},"309":{"name":"Putri Ummu Fawwazi","status":"Tidak Aktif"},"308":{"name":"Irma Ummu Nazwa","status":"Tidak Aktif"},"307":{"name":"Siti Maryam Ummu Fairuz","status":"Tidak Aktif"},"306":{"name":"Adinda Ummu Salwa Himairah","status":"Tidak Aktif"},"305":{"name":"Sabariah Siregar","status":"Aktif"},"304":{"name":"Fitri Yanti Ummu Luthfiyah","status":"Aktif"},"303":{"name":"Rahmat Lubis Abu 'Abid","status":"Aktif"},"302":{"name":"Erwinsyah Putra Abu Hadzayah","status":"Tidak Aktif"},"301":{"name":"Abdul Ghani Bunyamin","status":"Aktif"},"300":{"name":"Heriadi","status":"Tidak Aktif"},"299":{"name":"Mochammad Fadlun","status":"Tidak Aktif"},"298":{"name":"Muhammad Syukri","status":"Aktif"},"297":{"name":"Iwan Abu Fatih","status":"Tidak Aktif"},"296":{"name":"Suherman Abu Luthfiah","status":"Aktif"},"295":{"name":"Bagus Abdullah","status":"Aktif"},"294":{"name":"Eko gondo subroto","status":"Tidak Aktif"},"293":{"name":"Felani Heriawan (Iwan Abi Zahidi)","status":"Tidak Aktif"},"292":{"name":"Linda Ummu Alif","status":"Aktif"},"291":{"name":"Luqman","status":"Aktif"},"290":{"name":"Ramsini Ummu Aqila","status":"Aktif"},"289":{"name":"Junaidi Ahmad","status":"Aktif"},"288":{"name":"Muhajir Abu Ibrahim","status":"Tidak Aktif"},"287":{"name":"Andika yudhistira lubis","status":"Tidak Aktif"},"286":{"name":"Bambang Siswoyo","status":"Aktif"},"285":{"name":"Mustadin Abu Bagus (Pak Udin)","status":"Aktif"},"284":{"name":"Muhammad Rahmat","status":"Aktif"},"283":{"name":"Donizon Abu Najib","status":"Aktif"},"282":{"name":"Nilman Taufik","status":"Aktif"},"281":{"name":"Irwanda Hsb","status":"Tidak Aktif"},"280":{"name":"Muhammad Tarmizi Abu Annisa","status":"Tidak Aktif"},"279":{"name":"Syahrizal","status":"Tidak Aktif"},"278":{"name":"Parlindungan Hrp","status":"Tidak Aktif"},"277":{"name":"Sugianto Abu Khairun","status":"Aktif"},"276":{"name":"Ihsanuddin Saragih","status":"Tidak Aktif"},"275":{"name":"Endang Kusnadi Abu Dzaki","status":"Tidak Aktif"},"274":{"name":"Harmen Lbs Abu Said","status":"Aktif"},"273":{"name":"Irwandi Abu Fatimah","status":"Aktif"},"272":{"name":"Yuda Flambayu","status":"Tidak Aktif"},"271":{"name":"Beni Mutiara Abu Gaza","status":"Tidak Aktif"},"270":{"name":"Juliana","status":"Aktif"},"269":{"name":"Indra syahputra lubis Abu Ibrohim","status":"Tidak Aktif"},"268":{"name":"Jerni Murni Nasution Ummu Mufti","status":"Aktif"},"267":{"name":"Tien Hidayani Ummu Fadita","status":"Tidak Aktif"},"266":{"name":"Selamat Abu Arif","status":"Aktif"},"265":{"name":"Subakti Abu Nashrul","status":"Tidak Aktif"},"264":{"name":"Dian Hayaty Sinaga Ummu Khalisa","status":"Tidak Aktif"},"263":{"name":"M. Rizal Tanjung Abu Raihan","status":"Tidak Aktif"},"262":{"name":"Zainur Rusdi","status":"Tidak Aktif"},"261":{"name":"Wiwik Julianti","status":"Tidak Aktif"},"260":{"name":"Widodo Abu Arya","status":"Aktif"},"259":{"name":"Usman","status":"Aktif"},"258":{"name":"Ummu Halim","status":"Tidak Aktif"},"257":{"name":"Ummu Habib","status":"Tidak Aktif"},"256":{"name":"Ummu Al ziya","status":"Tidak Aktif"},"255":{"name":"Syafruddin Abu Nabila","status":"Aktif"},"254":{"name":"Supriadi","status":"Aktif"},"253":{"name":"Sri Kustari Salim","status":"Aktif"},"252":{"name":"Sri Kunarsih Salim","status":"Aktif"},"251":{"name":"Sofyan Efendi","status":"Tidak Aktif"},"250":{"name":"Seventina Sirait Ummu Vindy","status":"Aktif"},"249":{"name":"Rudi Arianto","status":"Aktif"},"248":{"name":"Rudi Abu Hafidzah","status":"Aktif"},"247":{"name":"Nurul Aini","status":"Tidak Aktif"},"246":{"name":"Nurhasanah Lubis","status":"Aktif"},"245":{"name":"Ngadirun","status":"Tidak Aktif"},"244":{"name":"Muhammad Zunaidi","status":"Aktif"},"243":{"name":"Muhammad Syafii","status":"Tidak Aktif"},"242":{"name":"Muhammad Mirza","status":"Aktif"},"241":{"name":"Joni Putra","status":"Aktif"},"240":{"name":"Indra Gunawan","status":"Tidak Aktif"},"239":{"name":"Haniah Lubis","status":"Aktif"},"238":{"name":"Haidari Hanum","status":"Aktif"},"237":{"name":"Fitmawati","status":"Tidak Aktif"},"236":{"name":"Dori Israwani Siregar","status":"Tidak Aktif"},"235":{"name":"Ali Akbar Lubis","status":"Tidak Aktif"},"234":{"name":"Muhammad Fikri Fadli Abu Zaidan","status":"Tidak Aktif"},"233":{"name":"Triady Abu Fauzi","status":"Aktif"},"232":{"name":"Junaidi Abu Juned","status":"Tidak Aktif"},"231":{"name":"Deni Wahyudi","status":"Tidak Aktif"},"230":{"name":"Aswandi Abu Taqi","status":"Aktif"},"229":{"name":"Haryati Ummu Fadlur","status":"Aktif"},"228":{"name":"Muhammad Zulfan Abu Wajir","status":"Tidak Aktif"},"227":{"name":"Rahmawati Ummu Azra","status":"Tidak Aktif"},"226":{"name":"Try Mhd M Habibie Abu Ukasyah","status":"Aktif"},"225":{"name":"Wahyu Saputro","status":"Aktif"},"224":{"name":"Fajar anugrah Abu Maryam","status":"Tidak Aktif"},"223":{"name":"Jimmi Kardo Sitepu Abu Naufa","status":"Tidak Aktif"},"222":{"name":"Ade Ferdiansyah Abi Dzaky Almer","status":"Tidak Aktif"},"221":{"name":"Andi erfiandi Abu Fadita","status":"Aktif"},"220":{"name":"ZAINAL ABIDIN Abu Harist","status":"Aktif"},"219":{"name":"Ahmad Khuwailid Abu Raihan","status":"Tidak Aktif"},"218":{"name":"Riyan rojali","status":"Tidak Aktif"},"217":{"name":"Nurul Athifah saffanah Ummu Ja'far","status":"Tidak Aktif"},"216":{"name":"Junaidi Abu Syahlu","status":"Aktif"},"215":{"name":"Muhammad Saputra Hasibuan","status":"Aktif"},"214":{"name":"Rubiani Ummu salsa","status":"Aktif"},"213":{"name":"Muhammad Umair Al Faruq Abu Mush'ab","status":"Tidak Aktif"},"212":{"name":"Khairil Arma Abu Alifah","status":"Aktif"},"211":{"name":"Chandra Syatria Ramadhana Abu Satria","status":"Aktif"},"210":{"name":"Muhammad Fakhrisyah (Pak David)","status":"Tidak Aktif"},"209":{"name":"Ibnu","status":"Tidak Aktif"},"208":{"name":"Edi Saputra Abu Bagus","status":"Aktif"},"207":{"name":"Indra Jaya Abu Farhan","status":"Tidak Aktif"},"206":{"name":"Abresia Nurhattandi","status":"Tidak Aktif"},"205":{"name":"Sri Rahayu Ummu Albi","status":"Aktif"},"204":{"name":"Husni Ilyas Abu Fathi","status":"Aktif"},"203":{"name":"Yusran Abu Kholid","status":"Aktif"},"202":{"name":"Muhammad Yasir Faralin Ritonga Abu Ammar Sulung","status":"Aktif"},"201":{"name":"LASINO ,SE Abu Hafiz","status":"Tidak Aktif"},"200":{"name":"Sarni Ummu Ilham","status":"Aktif"},"199":{"name":"Husin Sariangsah Abu Luthfi","status":"Tidak Aktif"},"198":{"name":"Wati rumiah Ummu Farrel","status":"Tidak Aktif"},"197":{"name":"Warsidi Abu Hafizah","status":"Aktif"},"196":{"name":"Hermansyah. Uf","status":"Tidak Aktif"},"195":{"name":"Koko hendrawan Abu Yudha","status":"Tidak Aktif"},"194":{"name":"Aswar Lubis Abu Rizky","status":"Tidak Aktif"},"193":{"name":"Zulfadli","status":"Aktif"},"192":{"name":"Angga Pratama","status":"Tidak Aktif"},"191":{"name":"Risman Abu Sa'ad","status":"Aktif"},"190":{"name":"Chairuman Priory Saragih Abu Fatih","status":"Tidak Aktif"},"189":{"name":"Vivi Zulmayanti Ummu Vivi","status":"Tidak Aktif"},"188":{"name":"Hermansyah Siregar Abu Nuha","status":"Aktif"},"187":{"name":"Firmansyah","status":"Tidak Aktif"},"186":{"name":"Ismail Abu Althaf","status":"Tidak Aktif"},"185":{"name":"Kharis Munandar Tanjung Abu Umar","status":"Tidak Aktif"},"184":{"name":"Nur Amanah Ummu Afif","status":"Tidak Aktif"},"183":{"name":"Chairani Ummu Akio / Rani","status":"Tidak Aktif"},"182":{"name":"Suci Khalida Ummu Aisyah","status":"Tidak Aktif"},"181":{"name":"Faridah Hanum Ummu Wanda","status":"Aktif"},"180":{"name":"Ibrahimsyah Abu Haura","status":"Tidak Aktif"},"179":{"name":"Sutrisno (Atok Amplas)","status":"Aktif"},"178":{"name":"Riwandi Abu Hafiz","status":"Tidak Aktif"},"177":{"name":"Firdaus","status":"Aktif"},"176":{"name":"Guspan Adriansyah Abu Millza","status":"Aktif"},"175":{"name":"Widianto Abu Tasya","status":"Tidak Aktif"},"174":{"name":"Hidayat Abu Hanin","status":"Tidak Aktif"},"173":{"name":"Raihan sohih","status":"Tidak Aktif"},"172":{"name":"Iwan Dermawan Abu Afka","status":"Tidak Aktif"},"171":{"name":"Yosrizal Abu Khanda","status":"Aktif"},"170":{"name":"Fauzizuhari","status":"Aktif"},"169":{"name":"Zulkifli Abu Rizky","status":"Aktif"},"168":{"name":"Nur Sidik Robbiul Awal (Robbi)","status":"Tidak Aktif"},"167":{"name":"Nadi Abu Faris","status":"Aktif"},"166":{"name":"Sekar Wike Ummu Noah","status":"Aktif"},"165":{"name":"Rendy Rahmat Siregar","status":"Tidak Aktif"},"164":{"name":"Rusiman Abu Taufiq","status":"Aktif"},"163":{"name":"Muhammad Haris","status":"Tidak Aktif"},"162":{"name":"Soeriyanrie Lubis Abu Nabila Maryam","status":"Aktif"},"161":{"name":"Tri Suci Fatimah Perangin angin Ummu Farhan","status":"Aktif"},"160":{"name":"Bobby Fazil Roka","status":"Aktif"},"159":{"name":"Iswandi Falsa Abu Faiz","status":"Tidak Aktif"},"158":{"name":"Iskandar Lubis","status":"Aktif"},"157":{"name":"Tirza Priyatna","status":"Aktif"},"156":{"name":"Yulian Abu Farras","status":"Aktif"},"155":{"name":"Asniar","status":"Aktif"},"154":{"name":"Susanto Abu Fakhri","status":"Aktif"},"153":{"name":"Abdul Rahman Ginting","status":"Tidak Aktif"},"152":{"name":"Andi Prawibowo Abu 'Aisyah","status":"Aktif"},"151":{"name":"Halim Padang Abu Rahmat","status":"Tidak Aktif"},"150":{"name":"Nasri Abu Abdillah","status":"Tidak Aktif"},"149":{"name":"Agus Salim Abu Salim","status":"Aktif"},"148":{"name":"Muhammad Ridwan Abu Ica","status":"Aktif"},"147":{"name":"Destro Sihaloho Abu Nuh","status":"Aktif"},"146":{"name":"Sarianto Abu Umar","status":"Aktif"},"145":{"name":"Hotman Sagala Abu Hafizah (Ucok)","status":"Aktif"},"144":{"name":"Orie Maitara Abu Aira","status":"Tidak Aktif"},"143":{"name":"Robby Maarif (Robby Abu Habil)","status":"Aktif"},"142":{"name":"DANI SAPUTRA ABU RIZDHAN","status":"Tidak Aktif"},"141":{"name":"Ibrahim Hasan (Hasan)","status":"Aktif"},"140":{"name":"Nanang Wahyu Abu Syifa","status":"Aktif"},"139":{"name":"Anto Kurniawan Abu Ubay","status":"Aktif"},"138":{"name":"Rizky Maulana Abu Khalid","status":"Tidak Aktif"},"137":{"name":"Arief Nur Hudaya Abu Arkenzie","status":"Aktif"},"136":{"name":"Suprapto Abu Hafiz","status":"Aktif"},"135":{"name":"Hendri Sumantri Puja Kesuma Abu Azis","status":"Tidak Aktif"},"134":{"name":"Hendra Abu Afigo","status":"Aktif"},"133":{"name":"Haris Padila Abu Zahra","status":"Aktif"},"132":{"name":"Zaidul Khair Abu Umair","status":"Aktif"},"131":{"name":"Ahmad Khairi Nawawi Lubis Abu Abdurrahman","status":"Tidak Aktif"},"130":{"name":"Hafni Oktafia Ummu Umar","status":"Aktif"},"129":{"name":"Dani Irfan Nasution Abu Dzaki","status":"Aktif"},"128":{"name":"Dicky Kurniawan Abu Abidzar","status":"Tidak Aktif"},"127":{"name":"Muhammad Arifin Abu Fawwazi","status":"Aktif"},"126":{"name":"Zulkifli Syahputra Ruslan (Atok)","status":"Tidak Aktif"},"125":{"name":"Romidi (Pak Midun)","status":"Aktif"},"124":{"name":"Almi Azhar Abu Madu","status":"Aktif"},"123":{"name":"Abdul Muluk Abu Malik","status":"Aktif"},"122":{"name":"Surianto Abu Ibrahim","status":"Aktif"},"121":{"name":"Ranap Sitompul","status":"Aktif"},"120":{"name":"Danil Suhendro Abu Abdillah","status":"Tidak Aktif"},"119":{"name":"Dedek Junaidi Abu Amirah","status":"Tidak Aktif"},"118":{"name":"Endang Sahputra Abu Rafifah","status":"Tidak Aktif"},"117":{"name":"Rifi Hamdani Abu Fakhri","status":"Aktif"},"116":{"name":"Achmad Ridho","status":"Aktif"},"115":{"name":"Fajar Oktavianto Abu Zubair","status":"Tidak Aktif"},"114":{"name":"Henry Adhitya Hafman Abu Abror","status":"Tidak Aktif"},"113":{"name":"Ernita Yanti Ummu Widithadit","status":"Aktif"},"112":{"name":"Sunanda Abu Rajab","status":"Aktif"},"111":{"name":"Anggiat Saragih Abu Hifzu","status":"Aktif"},"110":{"name":"Tengku Alviansyah Abu Mush'ab","status":"Aktif"},"109":{"name":"Muhammad Wira Andy Sitio Abu Farhan","status":"Tidak Aktif"},"108":{"name":"Denny Kurniawan Abu Naurah","status":"Tidak Aktif"},"107":{"name":"Kimsul musa syafi'i Abu Liza","status":"Tidak Aktif"},"106":{"name":"Jufrizal Abu Abdillah","status":"Aktif"},"105":{"name":"Muhlizar Abu Humaira","status":"Aktif"},"104":{"name":"Ganang Pariono Abu Fatih","status":"Aktif"},"103":{"name":"Rusli Abu Zaid","status":"Aktif"},"102":{"name":"Imam Santoso Abu Farhan","status":"Aktif"},"101":{"name":"M. Iwan Setiawan","status":"Aktif"},"100":{"name":"Amri Syahputra Nst, SH (Abeh Lokot)","status":"Tidak Aktif"},"99":{"name":"Abdul Mutolib Hsb Abu Fathur","status":"Aktif"},"98":{"name":"Dedi Beni Sutara Abu Arifin","status":"Aktif"},"97":{"name":"Siti nurjannah (Nuri ummu kiya)","status":"Aktif"},"96":{"name":"Ahmad Fadillah Abu Alif","status":"Tidak Aktif"},"95":{"name":"Irman Jamin","status":"Aktif"},"94":{"name":"Armansyah Ginting Abu Azzam","status":"Aktif"},"93":{"name":"Suartik Ummu Rizky","status":"Aktif"},"92":{"name":"Rizaldi Lubis","status":"Aktif"},"91":{"name":"Wira Admaga Abu Farhan","status":"Aktif"},"90":{"name":"G. Ahmad Jamal Abu Karim","status":"Aktif"},"89":{"name":"Muhammad Zikri Abu Ahmad","status":"Tidak Aktif"},"88":{"name":"Sumadi Abu Halim","status":"Tidak Aktif"},"87":{"name":"Hartati Ummu CIndy","status":"Aktif"},"86":{"name":"Henni Ramadani Ummu Zaid","status":"Aktif"},"85":{"name":"Kuntara Abu Kalinda","status":"Aktif"},"84":{"name":"Nur Afni","status":"Aktif"},"83":{"name":"Candra Rinaldy Abu Fathar","status":"Aktif"},"82":{"name":"Triimoro Bwarsid (Masteri Abu Farras)","status":"Tidak Aktif"},"81":{"name":"Asror Ruddin (Pak Acon)","status":"Aktif"},"80":{"name":"Hermansyah Abu Wahyu","status":"Aktif"},"79":{"name":"Hafizah Ummu Afiqah","status":"Tidak Aktif"},"78":{"name":"Khairul Amri Abu Ezar","status":"Aktif"},"77":{"name":"Fadly Ahmad Abu al barra Ahmad baladraf","status":"Tidak Aktif"},"76":{"name":"Noni Suriani Ummu Abe","status":"Aktif"},"75":{"name":"Abdul Mukti Abu Mutiara","status":"Aktif"},"74":{"name":"Sigit Triawan Abu Abyan","status":"Tidak Aktif"},"73":{"name":"Dede Novriza Abu Dzikri","status":"Aktif"},"72":{"name":"Ardiansyah Abu Ilham","status":"Tidak Aktif"},"71":{"name":"Surya Ningsih Ummu Ayu","status":"Aktif"},"70":{"name":"Defri Fahrul Chan Abu Syauqi","status":"Aktif"},"69":{"name":"Mardhiah Ummu Ikrimah","status":"Tidak Aktif"},"68":{"name":"Yolferi Abu Rayhan","status":"Aktif"},"67":{"name":"Zulham Efendi Abu Abinaya","status":"Tidak Aktif"},"66":{"name":"Amalia Zulfa","status":"Aktif"},"65":{"name":"Erik Muhari","status":"Tidak Aktif"},"64":{"name":"Wibowo Abu Syakir","status":"Tidak Aktif"},"63":{"name":"Wiyandes Nasution Abu Jihan","status":"Aktif"},"62":{"name":"Bosar Andri Bariang Abu Syaqilla","status":"Aktif"},"61":{"name":"Ricki Rio Abu Nakila","status":"Tidak Aktif"},"60":{"name":"Ilham Pardede Abu Fata","status":"Tidak Aktif"},"59":{"name":"Ridwan","status":"Tidak Aktif"},"58":{"name":"Zainuddin Muhammad Damyat Abu Nayif","status":"Tidak Aktif"},"57":{"name":"Baharudin Shalih Abu Fathan","status":"Tidak Aktif"},"56":{"name":"Muhammad Ikbal Pohan Abu Zein","status":"Aktif"},"55":{"name":"Boy Hendrawan Abu Sabai","status":"Aktif"},"54":{"name":"Jumakhir Abu Habib","status":"Aktif"},"53":{"name":"Indah Permata Sari Ummu Haniyah","status":"Tidak Aktif"},"52":{"name":"Rinaldi Purba","status":"Aktif"},"51":{"name":"Erdian Aris Windi Abu Qiana","status":"Tidak Aktif"},"50":{"name":"Tirmidzi Batubara Abu Shofiyyah","status":"Aktif"},"49":{"name":"Awaluddin Irfansyah","status":"Aktif"},"48":{"name":"Eko Susilo Abu Agha","status":"Tidak Aktif"},"47":{"name":"Alwad Aswad","status":"Tidak Aktif"},"46":{"name":"MHD DARUL IRVANDI","status":"Tidak Aktif"},"45":{"name":"Angga Setiawan Abu Asma Abdullah","status":"Tidak Aktif"},"44":{"name":"Suhendra Abu Daffa","status":"Tidak Aktif"},"43":{"name":"Muhamad Afrihan Mahfuzi Panjaitan Abu Khanza","status":"Aktif"},"42":{"name":"Ahmad Syafi'i","status":"Aktif"},"41":{"name":"Randy Zulkarnain Abu Zidane","status":"Tidak Aktif"},"40":{"name":"Adelina Ummu Fatur","status":"Tidak Aktif"},"39":{"name":"Anhar Abu Ryza","status":"Tidak Aktif"},"38":{"name":"Mukhlisin Abu Ayyub","status":"Aktif"},"37":{"name":"Husni Fajar Sukoco Abu Azzam","status":"Tidak Aktif"},"36":{"name":"Hotman Syamsuri Abu Annisa","status":"Tidak Aktif"},"35":{"name":"Siska Apriliandita Ummu Sisy","status":"Aktif"},"34":{"name":"Muhammad Chandra Perwira Abu Adam","status":"Tidak Aktif"},"33":{"name":"Taufik Hidayat Abu Buchori","status":"Aktif"},"32":{"name":"Habib Abdillah","status":"Aktif"},"31":{"name":"Frayuda Angga Putra Abu Kaisan","status":"Aktif"},"30":{"name":"Andi Arfian Abu Mu'az","status":"Tidak Aktif"},"29":{"name":"Effriadi Nasution Abu Muhammad","status":"Tidak Aktif"},"28":{"name":"Raja Dhany Samudra Abu Raisya","status":"Aktif"},"27":{"name":"M. Adnan Awwab, Nst Abu Syafaraz","status":"Aktif"},"26":{"name":"Ibrahim Cholid Abu Hasya","status":"Tidak Aktif"},"25":{"name":"Udin Nasution Abu Ismail","status":"Aktif"},"24":{"name":"R.Rr.Endang Panca Karyawati, SH. Ummu Atiqah","status":"Aktif"},"23":{"name":"Iskandar M Ali Abu Insan","status":"Aktif"},"22":{"name":"Dedi bin tarwin","status":"Tidak Aktif"},"21":{"name":"Sri Irawati Rezeki Ummu Ayyubi","status":"Aktif"},"20":{"name":"Erra Lyana Ummu Dira Disya","status":"Aktif"},"19":{"name":"Rudy Sofiyanto Abu Rhido-Razan","status":"Aktif"},"18":{"name":"Ismail Abu Fairuz","status":"Aktif"},"17":{"name":"Eka Mukti Iman Santoso Abu Salwa","status":"Tidak Aktif"},"16":{"name":"Agus Supriadi Abu Azzam","status":"Aktif"},"15":{"name":"Ummu Atiqah","status":"Tidak Aktif"},"14":{"name":"Jasmeini Ummu Insan","status":"Aktif"},"13":{"name":"Ikhsan Ramadhan Abu Asiyah","status":"Aktif"},"12":{"name":"Nofriyaldi Abu Zadit","status":"Aktif"},"11":{"name":"Rahma Yunita Ummu Adzra","status":"Aktif"},"10":{"name":"Handoko Abu Faiz","status":"Aktif"},"9":{"name":"Muhammad Miswandi Abu Sumayyah","status":"Tidak Aktif"},"8":{"name":"Erwin Abu Raziq","status":"Aktif"},"7":{"name":"Suherman Abu Zaky","status":"Aktif"},"6":{"name":"Anja Asmara Nst Abu A'izzah","status":"Aktif"},"5":{"name":"Mukmin Abu Ayunda","status":"Aktif"},"4":{"name":"Koko Yudhistira Abu Muhammad","status":"Aktif"},"3":{"name":"Imam Lutfi Abu Abdurahman","status":"Tidak Aktif"},"2":{"name":"Andy Wahyudi Abu Tantra","status":"Aktif"},"1":{"name":"Robby Ulfan Abu Shofiyah","status":"Aktif"}};
+        const DRIVERS = ["Nanang", "Pak Udin", "Sunanda", "Rian", "Abdul Mutolib"];
+        const ADMIN_PASSWORD = "kifmedan2024";
+        const GRAPHHOPPER_API_KEY = "fa5106de-b7fd-45cc-b58b-c8cf18051335";
+
+        // --- Variabel Global Firebase ---
+        let db, auth;
+        let requests = []; // Local cache
+        
+        // --- Inisialisasi Firebase ---
+        async function initializeFirebase() {
+            try {
+                // Konfigurasi ini akan disediakan oleh lingkungan Canvas
+                const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+                const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+
+                const app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+
+                // Autentikasi pengguna
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+                
+                console.log("Firebase initialized and user authenticated.");
+                
+                // Setelah inisialisasi, mulai listening ke data
+                listenToAmbulanceStatus();
+                listenToRequests();
+
+            } catch (error) {
+                console.error("Firebase Initialization Error:", error);
+                document.getElementById('loading-screen').innerHTML = "Gagal memuat database. Coba muat ulang halaman.";
+            }
+        }
+
+        // --- Path Database ---
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const requestsCollectionPath = `/artifacts/${appId}/public/data/requests`;
+        const statusDocPath = `/artifacts/${appId}/public/data/status/ambulance`;
+
+        // --- ELEMEN DOM ---
+        const dom = {
+            loadingScreen: document.getElementById('loading-screen'),
+            loadingText: document.getElementById('loading-text'),
+            appContainer: document.getElementById('app-container'),
+            userView: document.getElementById('user-view'),
+            waitingView: document.getElementById('waiting-view'),
+            adminLoginView: document.getElementById('admin-login-view'),
+            adminDashboardView: document.getElementById('admin-dashboard-view'),
+            bookingForm: document.getElementById('booking-form'),
+            noDaContainer: document.getElementById('no-da-container'),
+            noDaInput: document.getElementById('noDa'),
+            namaPemohon: document.getElementById('namaPemohon'),
+            memberStatusIcon: document.getElementById('member-status-icon'),
+            memberStatusText: document.getElementById('member-status-text'),
+            lokasiJemput: document.getElementById('lokasiJemput'),
+            lokasiTujuan: document.getElementById('lokasiTujuan'),
+            tarifContainer: document.getElementById('tarif-container'),
+            jarakText: document.getElementById('jarak-text'),
+            tarifText: document.getElementById('tarif-text'),
+            calculatingText: document.getElementById('calculating-text'),
+            ambulanceBusyModal: document.getElementById('ambulance-busy-modal'),
+            closeBusyModal: document.getElementById('close-busy-modal'),
+            requestDetailModal: document.getElementById('request-detail-modal'),
+            closeDetailModal: document.getElementById('close-detail-modal'),
+            detailContent: document.getElementById('detail-content'),
+            driverSelect: document.getElementById('driver-select'),
+            approveButton: document.getElementById('approve-button'),
+            rejectButton: document.getElementById('reject-button'),
+            adminLoginButton: document.getElementById('admin-login-button'),
+            adminLoginForm: document.getElementById('admin-login-form'),
+            passwordInput: document.getElementById('password'),
+            loginError: document.getElementById('login-error'),
+            logoutButton: document.getElementById('logout-button'),
+            currentServiceCard: document.getElementById('current-service-card'),
+            completeServiceButton: document.getElementById('complete-service-button'),
+            tabIncoming: document.getElementById('tab-incoming'),
+            tabHistory: document.getElementById('tab-history'),
+            tabContentIncoming: document.getElementById('tab-content-incoming'),
+            tabContentHistory: document.getElementById('tab-content-history'),
+            incomingRequestList: document.getElementById('incoming-request-list'),
+            historyRequestList: document.getElementById('history-request-list'),
+            noRequestText: document.getElementById('no-request-text'),
+            noHistoryText: document.getElementById('no-history-text'),
+        };
+
+        // --- STATE LOKAL ---
+        let state = {
+            loggedIn: false,
+            language: 'id'
+        };
+
+        const translations = {
+            'id': { loadingText:"Memuat aplikasi...", formTitle:"Formulir Pemesanan Layanan", applicantStatusLabel:"Status Pemesan", umumLabel:"Umum", kifMemberLabel:"Anggota KIF", noDaLabel:"No. DA (Nomor Pendaftaran Anggota)", applicantNameLabel:"Nama Pemohon", phoneNumberLabel:"Nomor HP (WhatsApp Aktif)", applicantAddressLabel:"Alamat Pemesan", serviceTypeLabel:"Keperluan Layanan", optionJenazah:"Mengantar Jenazah", optionSakit:"Mengantar Orang Sakit", pickupLocationLabel:"Lokasi Penjemputan", destinationLocationLabel:"Lokasi Tujuan", distanceLabel:"Estimasi Jarak:", fareLabel:"Estimasi Tarif:", calculatingText:"Menghitung...", submitButton:"Kirim Permohonan", waitingTitle:"Permohonan Terkirim!", waitingMessage:"Permohonan Anda sedang ditinjau oleh Operator. Mohon tunggu konfirmasi melalui WhatsApp/SMS. Anda akan dihubungi sesegera mungkin.", adminLoginTitle:"Login Operator", passwordLabel:"Password", loginError:"Password salah.", loginButton:"Masuk", dashboardTitle:"Dashboard Operator", logoutText:"Keluar", currentServiceInfo:"Satu layanan sedang berjalan. Pemesanan baru ditutup sementara.", completeServiceButton:"Selesaikan Layanan", requestListTitle:"Permohonan Masuk", historyListTitle:"Riwayat Lengkap", noRequestText:"Belum ada permohonan baru.", noHistoryText:"Belum ada riwayat pemesanan.", contactOperatorLabel:"Informasi Hubungi Operator", developerCreditLabel:"Pengembang : Abu Tantra", busyModalTitle:"Ambulans Sedang Beroperasi", busyModalText:"Mohon maaf, ambulans sedang dalam pelayanan. Silakan coba beberapa saat lagi.", closeButton:"Tutup", detailModalTitle:"Detail Permohonan", assignDriverLabel:"Tentukan Driver", approveButton:"Setujui & Kirim Notifikasi", rejectButton:"Tolak", viewDetailButton:"Tinjau", statusWaiting:"Menunggu", statusApproved:"Disetujui", statusInProgress:"Berjalan", statusCompleted:"Selesai", statusRejected:"Ditolak", kifMemberActive:"Status Anggota: Aktif", kifMemberInactive:"Status Anggota: Tidak Aktif (dikenakan tarif umum)", kifMemberNotFound:"No. DA tidak ditemukan (dikenakan tarif umum)", freeText:"GRATIS", addressNotFound:"Alamat tidak ditemukan.", distanceError:"Jarak tidak dapat dihitung.", },
+            'en': { loadingText:"Loading application...", formTitle:"Service Booking Form", applicantStatusLabel:"Applicant Status", umumLabel:"Public", kifMemberLabel:"KIF Member", noDaLabel:"Member ID (No. DA)", applicantNameLabel:"Applicant Name", phoneNumberLabel:"Phone Number (Active WhatsApp)", applicantAddressLabel:"Applicant Address", serviceTypeLabel:"Service Type", optionJenazah:"Transport Deceased", optionSakit:"Transport Patient", pickupLocationLabel:"Pickup Location", destinationLocationLabel:"Destination Location", distanceLabel:"Estimated Distance:", fareLabel:"Estimated Fare:", calculatingText:"Calculating...", submitButton:"Send Request", waitingTitle:"Request Sent!", waitingMessage:"Your request is being reviewed by the Operator. Please wait for confirmation via WhatsApp/SMS. You will be contacted as soon as possible.", adminLoginTitle:"Operator Login", passwordLabel:"Password", loginError:"Incorrect password.", loginButton:"Login", dashboardTitle:"Operator Dashboard", logoutText:"Logout", currentServiceInfo:"A service is currently in progress. New bookings are temporarily closed.", completeServiceButton:"Complete Service", requestListTitle:"Incoming Requests", historyListTitle:"Complete History", noRequestText:"No new requests yet.", noHistoryText:"There is no booking history yet.", contactOperatorLabel:"Operator Contact Information", developerCreditLabel:"Developer: Abu Tantra", busyModalTitle:"Ambulance is Busy", busyModalText:"We're sorry, the ambulance is currently in service. Please try again in a moment.", closeButton:"Close", detailModalTitle:"Request Details", assignDriverLabel:"Assign Driver", approveButton:"Approve & Send Notification", rejectButton:"Reject", viewDetailButton:"Review", statusWaiting:"Waiting", statusApproved:"Approved", statusInProgress:"In Progress", statusCompleted:"Completed", statusRejected:"Rejected", kifMemberActive:"Member Status: Active", kifMemberInactive:"Member Status: Inactive (public rates apply)", kifMemberNotFound:"Member ID not found (public rates apply)", freeText:"FREE", addressNotFound:"Address not found.", distanceError:"Could not calculate distance.", }
+        };
+
+        // --- FUNGSI UI & LOGIKA ---
+
+        function switchLanguage(lang) {
+            state.language = lang;
+            const t = translations[lang];
+
+            document.documentElement.lang = lang;
+            dom.loadingText.textContent = t.loadingText;
+            document.getElementById('form-title').textContent = t.formTitle;
+            document.getElementById('applicant-status-label').textContent = t.applicantStatusLabel;
+            document.getElementById('umum-label').textContent = t.umumLabel;
+            document.getElementById('kif-member-label').textContent = t.kifMemberLabel;
+            document.getElementById('no-da-label').textContent = t.noDaLabel;
+            document.getElementById('applicant-name-label').textContent = t.applicantNameLabel;
+            document.getElementById('phone-number-label').textContent = t.phoneNumberLabel;
+            document.getElementById('applicant-address-label').textContent = t.applicantAddressLabel;
+            document.getElementById('service-type-label').textContent = t.serviceTypeLabel;
+            document.getElementById('option-jenazah').textContent = t.optionJenazah;
+            document.getElementById('option-sakit').textContent = t.optionSakit;
+            document.getElementById('pickup-location-label').textContent = t.pickupLocationLabel;
+            document.getElementById('destination-location-label').textContent = t.destinationLocationLabel;
+            document.getElementById('distance-label').childNodes[0].nodeValue = t.distanceLabel + " ";
+            document.getElementById('fare-label').childNodes[0].nodeValue = t.fareLabel + " ";
+            document.getElementById('calculating-text').textContent = t.calculatingText;
+            document.getElementById('submit-button').textContent = t.submitButton;
+            document.getElementById('waiting-title').textContent = t.waitingTitle;
+            document.getElementById('waiting-message').textContent = t.waitingMessage;
+            document.getElementById('admin-login-title').textContent = t.adminLoginTitle;
+            document.getElementById('password-label').textContent = t.passwordLabel;
+            document.getElementById('login-error').textContent = t.loginError;
+            document.getElementById('login-button').textContent = t.loginButton;
+            document.getElementById('dashboard-title').textContent = t.dashboardTitle;
+            document.getElementById('logout-text').textContent = t.logoutText;
+            document.getElementById('current-service-info').textContent = t.currentServiceInfo;
+            document.getElementById('complete-service-button').textContent = t.completeServiceButton;
+            document.getElementById('request-list-title').textContent = t.requestListTitle;
+            document.getElementById('history-list-title').textContent = t.historyListTitle;
+            document.getElementById('no-request-text').textContent = t.noRequestText;
+            document.getElementById('no-history-text').textContent = t.noHistoryText;
+            document.getElementById('contact-operator-label').textContent = t.contactOperatorLabel;
+            document.getElementById('developer-credit-label').textContent = t.developerCreditLabel;
+            document.getElementById('busy-modal-title').textContent = t.busyModalTitle;
+            document.getElementById('busy-modal-text').textContent = t.busyModalText;
+            document.getElementById('close-busy-modal').textContent = t.closeButton;
+            document.getElementById('detail-modal-title').textContent = t.detailModalTitle;
+            document.getElementById('assign-driver-label').textContent = t.assignDriverLabel;
+            document.getElementById('approve-button').textContent = t.approveButton;
+            document.getElementById('reject-button').textContent = t.rejectButton;
+
+            dom.tabIncoming.textContent = t.requestListTitle;
+            dom.tabHistory.textContent = t.historyListTitle;
+
+            document.getElementById('lang-id').classList.toggle('bg-gray-200', lang === 'id');
+            document.getElementById('lang-en').classList.toggle('bg-gray-200', lang !== 'id');
+
+            if (state.loggedIn) {
+                renderIncomingRequests();
+                renderHistory();
+            }
+            lucide.createIcons();
+        }
+
+
+        // --- FUNGSI REAL-TIME DATABASE ---
+
+        function listenToAmbulanceStatus() {
+            onSnapshot(doc(db, statusDocPath), (docSnap) => {
+                const isBusy = docSnap.exists() && docSnap.data().isBusy;
+                const activeRequestId = docSnap.exists() ? docSnap.data().activeRequestId : null;
+
+                if (isBusy) {
+                    dom.ambulanceBusyModal.classList.remove('hidden');
+                    dom.bookingForm.querySelectorAll('input, select, textarea, button').forEach(el => el.disabled = true);
+                    dom.currentServiceCard.classList.remove('hidden');
+                    dom.completeServiceButton.dataset.id = activeRequestId;
+                } else {
+                    dom.ambulanceBusyModal.classList.add('hidden');
+                    dom.bookingForm.querySelectorAll('input, select, textarea, button').forEach(el => el.disabled = false);
+                    dom.currentServiceCard.classList.add('hidden');
+                }
+            });
+        }
+
+        function listenToRequests() {
+            const q = query(collection(db, requestsCollectionPath));
+            onSnapshot(q, (querySnapshot) => {
+                requests = [];
+                querySnapshot.forEach((doc) => {
+                    requests.push({ id: doc.id, ...doc.data() });
+                });
+                // Sort by timestamp descending
+                requests.sort((a, b) => new Date(b.tanggal) - new Date(a.tanggal));
+                
+                if(state.loggedIn) {
+                    renderIncomingRequests();
+                    renderHistory();
+                }
+                dom.loadingScreen.classList.add('hidden');
+                dom.appContainer.classList.remove('hidden');
+                dom.appContainer.classList.add('flex');
+            });
+        }
+        
+        async function calculateDistanceAndFare() {
+            const originAddress = dom.lokasiJemput.value.trim();
+            const destinationAddress = dom.lokasiTujuan.value.trim();
+            if (!originAddress || !destinationAddress) return;
+
+            dom.tarifContainer.classList.remove('hidden');
+            dom.jarakText.textContent = '...';
+            dom.tarifText.textContent = '...';
+            dom.calculatingText.classList.remove('hidden');
+
+            try {
+                const geocodeUrl = (address) => `https://graphhopper.com/api/1/geocode?q=${encodeURIComponent(address)}&locale=id&key=${GRAPHHOPPER_API_KEY}`;
+                const [originResponse, destinationResponse] = await Promise.all([fetch(geocodeUrl(originAddress)), fetch(geocodeUrl(destinationAddress))]);
+                if (!originResponse.ok || !destinationResponse.ok) throw new Error('Geocoding failed');
+                
+                const originData = await originResponse.json();
+                const destinationData = await destinationResponse.json();
+                if (!originData.hits?.[0] || !destinationData.hits?.[0]) throw new Error(translations[state.language].addressNotFound);
+
+                const originPoint = originData.hits[0].point;
+                const destinationPoint = destinationData.hits[0].point;
+
+                const routeUrl = `https://graphhopper.com/api/1/route?point=${originPoint.lat},${originPoint.lng}&point=${destinationPoint.lat},${destinationPoint.lng}&vehicle=car&key=${GRAPHHOPPER_API_KEY}&type=json`;
+                const routeResponse = await fetch(routeUrl);
+                if (!routeResponse.ok) throw new Error('Routing request failed');
+                
+                const routeData = await routeResponse.json();
+                if (!routeData.paths?.[0]) throw new Error(translations[state.language].distanceError);
+                
+                const distanceInKm = routeData.paths[0].distance / 1000;
+                
+                dom.calculatingText.classList.add('hidden');
+                dom.jarakText.textContent = `${distanceInKm.toFixed(1)} km`;
+                
+                const noDa = dom.noDaInput.value.trim().toUpperCase();
+                const isKifMember = document.querySelector('input[name="statusPemesan"]:checked').value === 'Anggota KIF';
+                const memberData = MOCK_KIF_MEMBERS[noDa];
+                const t = translations[state.language];
+
+                let tarif = (distanceInKm <= 30) ? 200000 : 150000 + (distanceInKm * 7000);
+                const isKifMemberAktif = isKifMember && memberData && memberData.status === 'Aktif';
+                
+                if (isKifMemberAktif && distanceInKm <= 30) {
+                    dom.tarifText.textContent = t.freeText;
+                } else {
+                    dom.tarifText.textContent = `Rp ${new Intl.NumberFormat('id-ID').format(Math.round(tarif))}`;
+                }
+
+            } catch (error) {
+                console.error("Error calculating distance:", error);
+                dom.calculatingText.classList.add('hidden');
+                dom.jarakText.textContent = 'Gagal';
+                dom.tarifText.textContent = `Gagal (${error.message})`;
+            }
+        }
+        
+        function renderIncomingRequests() {
+            dom.incomingRequestList.innerHTML = '';
+            const incoming = requests.filter(req => req.status === 'Menunggu');
+            dom.noRequestText.classList.toggle('hidden', incoming.length > 0);
+            incoming.forEach(req => dom.incomingRequestList.appendChild(createRequestCard(req)));
+            lucide.createIcons();
+        }
+
+        function renderHistory() {
+            dom.historyRequestList.innerHTML = '';
+            dom.noHistoryText.classList.toggle('hidden', requests.length > 0);
+            requests.forEach(req => dom.historyRequestList.appendChild(createRequestCard(req)));
+            lucide.createIcons();
+        }
+
+        function createRequestCard(req) {
+            const card = document.createElement('div');
+            card.className = "bg-white p-4 rounded-lg shadow-md border flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4";
+            
+            const statusColors = { Menunggu:'bg-blue-100 text-blue-800', Disetujui:'bg-yellow-100 text-yellow-800', Berjalan:'bg-green-100 text-green-800', Selesai:'bg-gray-200 text-gray-800', Ditolak:'bg-red-100 text-red-800' };
+            const t = translations[state.language];
+            const statusKey = req.status.replace(/\s+/g, '');
+            const statusText = t[`status${statusKey}`] || req.status;
+            
+            const formattedDate = new Date(req.tanggal).toLocaleString('id-ID', { dateStyle:'medium', timeStyle:'short' });
+
+            card.innerHTML = `
+                <div class="flex-grow">
+                    <div class="flex items-center justify-between">
+                        <p class="font-bold text-lg text-gray-800">${req.namaPemohon}</p>
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusColors[req.status] || ''}">${statusText}</span>
+                    </div>
+                    <p class="text-sm text-gray-500">${req.nomorHp} | ${t[req.keperluan === 'Mengantar Jenazah' ? 'optionJenazah' : 'optionSakit']}</p>
+                    <p class="text-sm text-gray-500 mt-1"><i data-lucide="map-pin" class="inline-block w-3 h-3"></i> ${req.lokasiJemput} <i data-lucide="arrow-right" class="inline-block w-3 h-3"></i> ${req.lokasiTujuan}</p>
+                    <p class="text-xs text-gray-400 mt-2">${formattedDate} ${req.driver ? `| Driver: ${req.driver}` : ''}</p>
+                </div>
+                ${req.status === 'Menunggu' ? `
+                <div class="flex-shrink-0 mt-2 sm:mt-0">
+                    <button data-id="${req.id}" class="view-detail-btn w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
+                        <i data-lucide="edit" class="w-4 h-4"></i> ${t.viewDetailButton}
+                    </button>
+                </div>` : ''}
+            `;
+            return card;
+        }
+        
+        function showRequestDetail(requestId) {
+            const req = requests.find(r => r.id === requestId);
+            if (!req) return;
+            const t = translations[state.language];
+            dom.detailContent.innerHTML = `<p><strong>${t.applicantNameLabel}:</strong> ${req.namaPemohon}</p><p><strong>${t.phoneNumberLabel}:</strong> ${req.nomorHp}</p><p><strong>${t.applicantAddressLabel}:</strong> ${req.alamatPemesan}</p><p><strong>${t.applicantStatusLabel}:</strong> ${req.statusPemesan} ${req.statusPemesan === 'Anggota KIF' ? `(${req.noDa})` : ''}</p><p><strong>${t.serviceTypeLabel}:</strong> ${t[req.keperluan === 'Mengantar Jenazah' ? 'optionJenazah' : 'optionSakit']}</p><p><strong>${t.pickupLocationLabel}:</strong> ${req.lokasiJemput}</p><p><strong>${t.destinationLocationLabel}:</strong> ${req.lokasiTujuan}</p><p><strong>${t.distanceLabel}</strong> ${req.jarak}</p><p><strong>${t.fareLabel}</strong> ${req.tarif}</p>`;
+            dom.approveButton.dataset.id = requestId;
+            dom.rejectButton.dataset.id = requestId;
+            dom.requestDetailModal.classList.remove('hidden');
+        }
+
+        async function approveRequest(requestId) {
+            const selectedDriver = dom.driverSelect.value;
+            await updateDoc(doc(db, requestsCollectionPath, requestId), { status: 'Berjalan', driver: selectedDriver });
+            await setDoc(doc(db, statusDocPath), { isBusy: true, activeRequestId: requestId });
+            dom.requestDetailModal.classList.add('hidden');
+        }
+
+        async function rejectRequest(requestId) {
+            await updateDoc(doc(db, requestsCollectionPath, requestId), { status: 'Ditolak' });
+            dom.requestDetailModal.classList.add('hidden');
+        }
+
+        async function completeService(requestId) {
+            await updateDoc(doc(db, requestsCollectionPath, requestId), { status: 'Selesai' });
+            await setDoc(doc(db, statusDocPath), { isBusy: false, activeRequestId: null });
+            alert('Layanan telah diselesaikan. Ambulans kini tersedia.');
+        }
+
+        function switchView(view) {
+            ['userView', 'waitingView', 'adminLoginView', 'adminDashboardView'].forEach(v => dom[v].classList.add('hidden'));
+            if(dom[view]) dom[view].classList.remove('hidden');
+            if(view === 'admin-dashboard') {
+                renderIncomingRequests();
+                renderHistory();
+            }
+        }
+
+        // --- EVENT LISTENERS ---
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeFirebase();
+            
+            document.querySelectorAll('input[name="statusPemesan"]').forEach(radio=>radio.addEventListener('change', (e)=>{dom.noDaContainer.classList.toggle('hidden', e.target.value!=='Anggota KIF');dom.memberStatusText.textContent='';dom.memberStatusIcon.innerHTML='';if(e.target.value==='Umum')dom.namaPemohon.value='';calculateDistanceAndFare()}));
+            dom.noDaInput.addEventListener('blur', ()=>{const noDa=dom.noDaInput.value.trim().toUpperCase();const member=MOCK_KIF_MEMBERS[noDa];const t=translations[state.language];if(member){dom.namaPemohon.value=member.name;if(member.status==='Aktif'){dom.memberStatusText.textContent=t.kifMemberActive;dom.memberStatusText.className='text-sm mt-1 text-green-600';dom.memberStatusIcon.innerHTML=`<i data-lucide="check-circle-2" class="h-5 w-5 text-green-500"></i>`}else{dom.memberStatusText.textContent=t.kifMemberInactive;dom.memberStatusText.className='text-sm mt-1 text-yellow-600';dom.memberStatusIcon.innerHTML=`<i data-lucide="alert-triangle" class="h-5 w-5 text-yellow-500"></i>`}}else if(noDa){dom.memberStatusText.textContent=t.kifMemberNotFound;dom.memberStatusText.className='text-sm mt-1 text-red-600';dom.memberStatusIcon.innerHTML=`<i data-lucide="x-circle" class="h-5 w-5 text-red-500"></i>`;dom.namaPemohon.value=''}else{dom.memberStatusText.textContent='';dom.memberStatusIcon.innerHTML='';dom.namaPemohon.value=''}lucide.createIcons();calculateDistanceAndFare()});
+            dom.lokasiJemput.addEventListener('blur', calculateDistanceAndFare);
+            dom.lokasiTujuan.addEventListener('blur', calculateDistanceAndFare);
+            dom.closeBusyModal.addEventListener('click',()=>dom.ambulanceBusyModal.classList.add('hidden'));
+            dom.adminDashboardView.addEventListener('click', (e) => { if(e.target.closest('.view-detail-btn')) { showRequestDetail(e.target.closest('.view-detail-btn').dataset.id); } });
+            dom.closeDetailModal.addEventListener('click', ()=>dom.requestDetailModal.classList.add('hidden'));
+            dom.adminLoginButton.addEventListener('click', ()=>switchView('admin-login'));
+            dom.adminLoginForm.addEventListener('submit', (e)=>{e.preventDefault();if(dom.passwordInput.value===ADMIN_PASSWORD){state.loggedIn=true;switchView('admin-dashboard');dom.passwordInput.value='';dom.loginError.classList.add('hidden')}else{dom.loginError.classList.remove('hidden')}});
+            dom.logoutButton.addEventListener('click', ()=>{state.loggedIn=false;switchView('user')});
+            dom.tabIncoming.addEventListener('click', ()=>{dom.tabContentIncoming.classList.remove('hidden');dom.tabContentHistory.classList.add('hidden');dom.tabIncoming.className="whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm border-blue-500 text-blue-600";dom.tabHistory.className="whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"});
+            dom.tabHistory.addEventListener('click', ()=>{dom.tabContentIncoming.classList.add('hidden');dom.tabContentHistory.classList.remove('hidden');dom.tabHistory.className="whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm border-blue-500 text-blue-600";dom.tabIncoming.className="whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"});
+            document.getElementById('lang-id').addEventListener('click', ()=>switchLanguage('id'));
+            document.getElementById('lang-en').addEventListener('click', ()=>switchLanguage('en'));
+
+            // Submit form to Firestore
+            dom.bookingForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                const newRequest = {
+                    status: 'Menunggu',
+                    driver: null,
+                    namaPemohon: formData.get('namaPemohon'),
+                    nomorHp: formData.get('nomorHp'),
+                    alamatPemesan: formData.get('alamatPemesan'),
+                    statusPemesan: formData.get('statusPemesan'),
+                    noDa: formData.get('noDa').toUpperCase(),
+                    keperluan: formData.get('keperluan'),
+                    lokasiJemput: dom.lokasiJemput.value,
+                    lokasiTujuan: dom.lokasiTujuan.value,
+                    jarak: dom.jarakText.textContent,
+                    tarif: dom.tarifText.textContent,
+                    tanggal: new Date().toISOString()
+                };
+                
+                try {
+                    await addDoc(collection(db, requestsCollectionPath), newRequest);
+                    switchView('waiting');
+                    dom.bookingForm.reset();
+                    dom.tarifContainer.classList.add('hidden');
+                    dom.noDaContainer.classList.add('hidden');
+                } catch (error) {
+                    console.error("Error adding document: ", error);
+                    alert("Gagal mengirim permohonan. Silakan coba lagi.");
+                }
+            });
+
+            // Operator actions
+            dom.approveButton.addEventListener('click', (e) => approveRequest(e.target.dataset.id));
+            dom.rejectButton.addEventListener('click', (e) => rejectRequest(e.target.dataset.id));
+            dom.completeServiceButton.addEventListener('click', (e) => completeService(e.target.dataset.id));
+
+            // Isi dropdown driver
+            DRIVERS.forEach(driver => {
+                const option = document.createElement('option');
+                option.value = driver;
+                option.textContent = driver;
+                dom.driverSelect.appendChild(option);
+            });
+            
+            switchLanguage('id'); // Set default language
+        });
+    </script>
+</body>
+</html>
+
